@@ -110,3 +110,18 @@ function _put (cache, key, file, fname, opts) {
     }
   })
 }
+
+module.exports.rm = rm
+function rm (cache, key, opts) {
+  opts = Object.assign({}, opts)
+  return cacache.get(cache, key, opts).then(info => {
+    const files = JSON.parse(info.data.toString('utf8'))
+    return BB.map(Object.keys(files), f => {
+      return cacache.rm(cache, `${key}:${f}`, opts).then(() => {
+        if (opts.content) {
+          return cacache.rm.content(cache, files[f].integrity)
+        }
+      })
+    })
+  })
+}
