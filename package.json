@@ -43,7 +43,8 @@
   "dependencies": {
     "bluebird": "^3.5.0",
     "cacache": "^9.2.6",
-    "graceful-fs": "^4.1.11"
+    "graceful-fs": "^4.1.11",
+    "mkdirp": "^0.5.1"
   },
   "devDependencies": {
     "nyc": "^10.3.2",
