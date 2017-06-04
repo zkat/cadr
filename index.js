@@ -96,6 +96,7 @@ function _put (cache, key, file, fname, opts) {
         from.on('error', cb)
         to.on('error', cb)
         to.on('finish', () => cb())
+        from.pipe(to)
       }).then(() => ({[fname]: Object.assign({integrity}, stat)}))
     }
   }).catch({code: 'ENOENT'}, err => {
