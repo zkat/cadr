@@ -78,14 +78,21 @@ function _put (cache, key, file, fname, opts) {
       // ignored. We don't do things like symlinks rn
     } else if (stat.size < MAX_BULK_SIZE) {
       return fs.readFileAsync(file).then(data => {
-        return cacache.put(cache, `${key}:${fname}`, data, opts)
+        return cacache.put(
+          cache, `${key}:${fname}`, data, Object.assign({}, opts, {
+            metadata: stat
+          })
+        )
       }).then(integrity => ({[fname]: Object.assign({integrity}, stat)}))
     } else {
       let integrity
       return BB.fromNode(cb => {
         const from = fs.createReadStream(file)
-        const to = cacache.put.stream(cache, `${key}:${fname}`, opts)
-        .on('integrity', i => { integrity = i })
+        const to = cacache.put.stream(
+          cache, `${key}:${fname}`, Object.assign({}, opts, {
+            metadata: stat
+          }
+        )).on('integrity', i => { integrity = i })
         from.on('error', cb)
         to.on('error', cb)
         to.on('finish', () => cb())
