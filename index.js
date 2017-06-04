@@ -11,6 +11,7 @@ const MAX_BULK_SIZE = 5 * 1024 * 1024 // 5MB
 
 module.exports.get = get
 function get (cache, key, dest, opts) {
+  opts = Object.assign({}, opts)
   const start = Date.now()
   let total = 0
   return cacache.get(cache, key, opts).then(info => {
@@ -21,7 +22,7 @@ function get (cache, key, dest, opts) {
       const fstat = files[f]
       if (fstat.isDir) {
         return mkdirp(fdest)
-        .then(() => fs.chmodAsync(fdest, fstat.mode))
+        .then(() => fs.chmodAsync(fdest, opts.dmode || fstat.mode))
         .then(() => fs.utimesAsync(
           fdest, new Date(fstat.atime), new Date(fstat.mtime)
         ))
@@ -30,7 +31,9 @@ function get (cache, key, dest, opts) {
           if (fstat.size > MAX_BULK_SIZE) {
             return BB.fromNode(cb => {
               const from = cacache.get.stream.byDigest(cache, fstat.integrity)
-              const to = fs.createWriteStream(fdest, {mode: fstat.mode})
+              const to = fs.createWriteStream(fdest, {
+                mode: opts.fmode || fstat.mode
+              })
               from.on('error', cb)
               to.on('error', cb)
               to.on('close', () => cb())
@@ -38,7 +41,9 @@ function get (cache, key, dest, opts) {
             })
           } else {
             return cacache.get.byDigest(cache, fstat.integrity).then(d => {
-              return fs.writeFileAsync(fdest, d, {mode: fstat.mode})
+              return fs.writeFileAsync(fdest, d, {
+                mode: opts.fmode || fstat.mode
+              })
             })
           }
         }).then(() => fs.utimesAsync(
