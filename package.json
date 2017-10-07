@@ -39,7 +39,7 @@
     "email": "kzm@sykosomatic.org",
     "twitter": "maybekatz"
   },
-  "license": "CC0-1.0",
+  "license": "ISC",
   "dependencies": {
     "bluebird": "^3.5.0",
     "cacache": "^9.2.6",
