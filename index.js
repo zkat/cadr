@@ -3,86 +3,52 @@
 const BB = require('bluebird')
 
 const cacache = require('cacache')
-const contentPath = require('cacache/lib/content/path.js')
 const fs = BB.promisifyAll(require('graceful-fs'))
 const mkdirp = BB.promisify(require('mkdirp'))
 const path = require('path')
 
-const MAX_BULK_SIZE = 1 * 1024 * 1024 // 5MB
+const MAX_BULK_SIZE = 1 * 1024 * 1024 // 1MB
 
 module.exports.get = get
 function get (cache, key, dest, opts) {
-  opts = Object.assign({}, opts)
-  const start = Date.now()
+  opts = Object.assign({}, opts || {})
+  delete opts.integrity
   return cacache.get(cache, key, opts).then(info => {
     const files = JSON.parse(info.data.toString('utf8'))
     return BB.map(Object.keys(files), f => {
       const fdest = path.join(dest, f)
       const fstat = files[f]
       if (fstat.isDir) {
-        return mkdirp(fdest)
-        .then(() => fs.chmodAsync(fdest, opts.dmode || fstat.mode))
+        return mkdirp(fdest, {mode: opts.dmode || fstat.mode})
         .then(() => fs.utimesAsync(
           fdest, new Date(fstat.atime), new Date(fstat.mtime)
         ))
       } else {
-        return mkdirp(path.dirname(fdest)).then(() => {
-          if (opts.unsafeLink) {
-            return cacache.get.link.byDigest(
-              cache, fstat.integrity, fdest, opts
-            )
-          } else if (fstat.size > MAX_BULK_SIZE) {
-            return BB.fromNode(cb => {
-              const from = cacache.get.stream.byDigest(cache, fstat.integrity)
-              from.on('error', cb)
-              if (opts.link) {
-                from.resume()
-                from.on('end', () => {
-                  cacache.get.link.byDigest(
-                    cache, fstat.integrity, fdest, opts
-                  ).nodeify(cb)
-                })
-              } else {
-                const to = fs.createWriteStream(fdest, {
-                  mode: opts.fmode || fstat.mode
-                })
-                to.on('error', cb)
-                to.on('close', () => cb())
-                from.pipe(to)
-              }
-            })
-          } else {
-            return cacache.get.byDigest(cache, fstat.integrity).then(d => {
-              if (opts.link) {
-                return cacache.get.link.byDigest(
-                  cache, fstat.integrity, fdest, opts
-                )
-              } else {
-                return fs.writeFileAsync(fdest, d, {
-                  mode: opts.fmode || fstat.mode
-                })
-              }
-            })
-          }
-        })
+        return mkdirp(path.dirname(fdest))
+        .then(() => cacache.get.copy.byDigest(cache, fstat.integrity, fdest))
+        .then(() => fs.openAsync(fdest, 'w'))
+        .tap(fd => fs.fchmodAsync(fd, opts.fmode || fstat.mode))
+        .tap(fd => fs.futimesAsync(
+          fd, new Date(fstat.atime), new Date(fstat.mtime)
+        ))
+        .then(fd => fs.closeAsync(fd))
       }
     }, {concurrency: 100})
-  }).then(() => console.log(`Done in ${(Date.now() - start) / 1000}s`))
+  })
 }
 
 module.exports.put = put
 function put (cache, key, file, opts) {
-  const start = Date.now()
+  opts = Object.assign({}, opts || {})
+  delete opts.integrity
   return _put(cache, key, path.resolve(file), '', opts).then(meta => {
     return cacache.put(cache, key, JSON.stringify(meta), opts)
-  }).then(x => {
-    console.log(`Done in ${(Date.now() - start) / 1000}s`)
-    return x
   })
 }
 
 function _put (cache, key, file, fname, opts) {
   opts = Object.assign({}, opts || {})
+  delete opts.integrity
   return fs.statAsync(file).then(stat => {
     if (stat.isDirectory()) {
       return BB.map(fs.readdirAsync(file), f => {
@@ -140,9 +106,4 @@ function rm (cache, key, opts) {
       })
     }, {concurrency: 5})
   })
-}
-
-cacache.get.link = () => {}
-cacache.get.link.byDigest = (cache, integrity, dest, opts) => {
-  return fs.linkAsync(contentPath(cache, integrity), dest)
 }

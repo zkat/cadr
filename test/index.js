@@ -2,4 +2,6 @@
 
 const test = require('tap').test
 
-test('api is fully implemented')
+test('basic api', t => {
+  
+})

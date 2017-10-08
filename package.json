@@ -41,8 +41,8 @@
   },
   "license": "ISC",
   "dependencies": {
-    "bluebird": "^3.5.0",
-    "cacache": "^9.2.6",
+    "bluebird": "^3.5.1",
+    "cacache": "^9.3.0",
     "graceful-fs": "^4.1.11",
     "mkdirp": "^0.5.1"
   },
@@ -50,6 +50,7 @@
     "nyc": "^10.3.2",
     "standard": "^9.0.2",
     "standard-version": "^4.0.0",
+    "tacks": "^1.2.6",
     "tap": "^10.3.2",
     "weallbehave": "^1.2.0",
     "weallcontribute": "^1.0.8"
