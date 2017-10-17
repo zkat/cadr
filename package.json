@@ -43,11 +43,14 @@
   "dependencies": {
     "bluebird": "^3.5.1",
     "cacache": "^9.3.0",
+    "glob": "^7.1.2",
     "graceful-fs": "^4.1.11",
-    "mkdirp": "^0.5.1"
+    "mkdirp": "^0.5.1",
+    "npm-packlist": "^1.1.9"
   },
   "devDependencies": {
     "nyc": "^10.3.2",
+    "rimraf": "^2.6.2",
     "standard": "^9.0.2",
     "standard-version": "^4.0.0",
     "tacks": "^1.2.6",
