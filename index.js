@@ -23,23 +23,23 @@ function get (cache, key, dest, opts) {
       const fdest = path.join(dest, f)
       const fstat = files[f]
       return BB.resolve()
-      .then(() => {
-        const dir = path.dirname(fdest)
-        if (!dirs.has(dir)) {
-          return mkdirp(dir).then(() => dirs.add(dir))
-        }
-      })
-      .then(() => {
-        if (opts.link) {
-          return fs.linkAsync(contentPath(cache, fstat.integrity), fdest)
-        } else {
-          return cacache.get.copy.byDigest(cache, fstat.integrity, fdest, {
-            mode: opts.fmode || fstat.mode,
-            mtime: fstat.mtime,
-            unsafe: opts.unsafe
-          })
-        }
-      })
+        .then(() => {
+          const dir = path.dirname(fdest)
+          if (!dirs.has(dir)) {
+            return mkdirp(dir).then(() => dirs.add(dir))
+          }
+        })
+        .then(() => {
+          if (opts.link) {
+            return fs.linkAsync(contentPath(cache, fstat.integrity), fdest)
+          } else {
+            return cacache.get.copy.byDigest(cache, fstat.integrity, fdest, {
+              mode: opts.fmode || fstat.mode,
+              mtime: fstat.mtime,
+              unsafe: opts.unsafe
+            })
+          }
+        })
     }, {concurrency: 100})
   })
 }
@@ -49,16 +49,16 @@ function put (cache, key, file, opts) {
   opts = Object.assign({}, opts || {})
   delete opts.integrity
   return BB.resolve(packlist({path: file}))
-  .then(files => BB.map(files, f => {
-    return _put(cache, key, path.join(file, f), f, opts)
-  }), {concurrency: 10})
-  .then(stats => stats.reduce((acc, info) => {
-    if (info) {
-      acc[info.path] = info
-    }
-    return acc
-  }, {}))
-  .then(meta => cacache.put(cache, key, JSON.stringify(meta), opts))
+    .then(files => BB.map(files, f => {
+      return _put(cache, key, path.join(file, f), f, opts)
+    }), {concurrency: 10})
+    .then(stats => stats.reduce((acc, info) => {
+      if (info) {
+        acc[info.path] = info
+      }
+      return acc
+    }, {}))
+    .then(meta => cacache.put(cache, key, JSON.stringify(meta), opts))
 }
 
 function _put (cache, key, file, fname, opts) {
@@ -87,7 +87,7 @@ function _put (cache, key, file, fname, opts) {
             mode: stat.mode,
             metadata: stat
           }
-        )).on('integrity', i => { integrity = i })
+          )).on('integrity', i => { integrity = i })
         from.on('error', cb)
         to.on('error', cb)
         to.on('finish', () => cb())
