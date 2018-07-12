@@ -42,11 +42,11 @@
   "license": "ISC",
   "dependencies": {
     "bluebird": "^3.5.1",
-    "cacache": "^9.3.0",
+    "cacache": "^11.0.2",
     "glob": "^7.1.2",
     "graceful-fs": "^4.1.11",
     "mkdirp": "^0.5.1",
-    "npm-packlist": "^1.1.9"
+    "npm-packlist": "^1.1.10"
   },
   "devDependencies": {
     "nyc": "^10.3.2",
